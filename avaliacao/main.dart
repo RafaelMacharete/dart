@@ -24,8 +24,7 @@ void main() {
   // Handling invalid entrace.
   // Cpf regex (xxx.xxx.xxx-xx)
   final exp = RegExp(
-    r'(\d{3})+\.?(\d{3})+\.?(\d{3})+-?([\dxX]{1,2})+',
-    multiLine: true,
+    r'^\d{3}\.\d{3}\.\d{3}-\d{2}$',
   );
 
   stdout.write('Enter your cpf (e.g., xxx.xxx.xxx-xx): ');
@@ -100,9 +99,14 @@ double calculatePurchaseValue(int productQuantity, double productPrice) {
   return purchasePrice;
 }
 
+bool isValid(String input) {
+  final regex = RegExp(r'^[0-9eE]+$');
+  return regex.hasMatch(input);
+}
+
 dynamic initiatePurchase(productsAndServicesList) {
   String? userProductChoice;
-  int userProductQuantity;
+  String? userProductQuantity;
   dynamic userCart = [];
 
     // User product choice.
@@ -110,19 +114,21 @@ dynamic initiatePurchase(productsAndServicesList) {
       listProductsAndServices(productsAndServicesList);
       stdout.write('\nChoose a product (e/E to exit): ');
       userProductChoice = stdin.readLineSync();
+      while (userProductChoice == null || userProductChoice.trim().isEmpty 
+        || !isValid(userProductChoice)) 
+      {
+        stdout.write('Enter a valid choice (e/E to exit): ');
+        userProductChoice = stdin.readLineSync();
+      }
       if (userProductChoice == 'e' || userProductChoice == 'E') {
         break;
       }
-      while (userProductChoice == null || userProductChoice.trim().isEmpty) {
-        stdout.write('Enter a valid choice: ');
-        userProductChoice = stdin.readLineSync();
-      }
-
+      
       bool isQuantityValid = false;
 
       // Adding product and quantity to the cart.
       do {
-        // In case of a service.
+        // In case of a service, is not need to insert the quantity.
         if (productsAndServicesList['stock'][int.parse(userProductChoice)] ==
             null) {
           print('This is a service, you do not need to choose a quantity.');
@@ -137,14 +143,17 @@ dynamic initiatePurchase(productsAndServicesList) {
 
         } else {
           stdout.write('Enter a quantity: ');
-          userProductQuantity = int.parse(stdin.readLineSync()!);
-          while (userProductQuantity <= 0 || userProductQuantity == null) {
+          userProductQuantity = stdin.readLineSync();
+          while(userProductQuantity == null || userProductQuantity.trim().isEmpty ||
+            int.parse(userProductQuantity) <= 0 )
+          {
             stdout.write('Enter a valid quantity: ');
-            userProductQuantity = int.parse(stdin.readLineSync()!);
+            userProductQuantity = stdin.readLineSync();
           }
-          if (userProductQuantity <=
+          int userProductQuantityInNumber = int.parse(userProductQuantity);
+
+          if (userProductQuantityInNumber <=
               productsAndServicesList['stock'][int.parse(userProductChoice)]) {
-            
             isQuantityValid = true;
             double productPrice =
                 productsAndServicesList['price'][int.parse(userProductChoice)];
