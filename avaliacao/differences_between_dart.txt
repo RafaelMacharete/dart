@@ -1,0 +1,21 @@
+Dart em comparação com o C.
+
+C: linguagem de baixo nível, próxima do hardware, usada para sistemas, drivers, sistemas embarcados.
+
+Dart: Linguagem de alto nível, moderna, voltada a produtividade (apps móveis, web).
+
+C:
+Tipagem estática e obrigatória: sempre define o tipo na declaração.
+Não existe var, dynamic ou coisas do tip.
+
+int a = 10;
+float b = 3.14;
+char c = 'X';
+
+Dart:
+Tipagem estática com inferência: pode usar var, final, const ou dynamic.
+Tipos são objetos, não primitivos.
+
+var a = 10;        // inferido como int
+double b = 3.14;   // double
+String c = 'X';    // string, não char

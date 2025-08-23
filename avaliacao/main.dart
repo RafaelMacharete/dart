@@ -10,18 +10,16 @@ void main() {
     'type': ['product', 'service', 'product', 'product'],
   };
 
-  // Cpf regex.
-
   // User data.
   stdout.write('Enter your name: ');
   String? name = stdin.readLineSync();
-  // Handling invalid entrace.
+  // Handling invalid entrance.
   while (name == null || name.trim().isEmpty) {
     stdout.write('Enter a valid name: ');
     name = stdin.readLineSync();
   }
 
-  // Handling invalid entrace.
+  // Handling invalid entrance.
   // Cpf regex (xxx.xxx.xxx-xx)
   final exp = RegExp(
     r'^\d{3}\.\d{3}\.\d{3}-\d{2}$',
@@ -36,8 +34,11 @@ void main() {
     document = stdin.readLineSync();
   }
 
-  // User entrace:
-  initiatePurchase(product_and_service_list);
+  // User entrance:
+  dynamic userCart = initiatePurchase(product_and_service_list);
+  print(userCart);
+  double total = calculatePurchaseValue(userCart);
+  print('Total purchase value: \$${total.toStringAsFixed(2)}');
 }
 
 dynamic listProductsAndServices(dynamic productsAndServicesList) {
@@ -55,119 +56,169 @@ void showProductChoiced(int idx, productsAndServicesList) {
   );
 }
 
-double calculatePurchaseValue(int productQuantity, double productPrice) {
-  int paymentMethodChoosed;
+double calculatePurchaseValue(dynamic userCart) {
+  int? paymentMethodChoosed;
+  double purchasePrice = 0.0;
 
-  double purchasePrice = productPrice * productQuantity;
+  // Sum cart products
+  for (var item in userCart) {
+    purchasePrice += item['price'] * item['quantity'];
+  }
 
+  // Payment method selection
   do {
     stdout.write(
-      'Choose a payment method: \n[0] - Cash (10% discount)\n[1] - Debit (5% discount)\n[2] - Credit (5% interest)\n[3] - PIX (10% discount)',
+      '\nTotal: \$${purchasePrice.toStringAsFixed(2)}'
+      '\nChoose a payment method:' 
+      '\n[0] - Cash (10% discount)'
+      '\n[1] - Debit (5% discount)'
+      '\n[2] - Credit (5% interest)'
+      '\n[3] - PIX (10% discount)'
+      '\nYour choice: ',
     );
-    paymentMethodChoosed = int.parse(stdin.readLineSync()!);
-    switch (paymentMethodChoosed) {
-      case 0:
-        double valuePaid = double.parse(stdin.readLineSync()!);
-        stdout.write('Enter the value paid: ');
-        // Lower value paid
-        while (valuePaid < purchasePrice) {
-          print("Is remaining: ${purchasePrice - valuePaid}");
-        }
-        if (valuePaid > purchasePrice) {
-          print("Your change is: ${valuePaid - purchasePrice}");
-        }
-        double discount = purchasePrice * 0.10;
-        purchasePrice -= discount;
-        break;
-      case 1:
-        double discount = purchasePrice * 0.05;
-        purchasePrice -= discount;
-        break;
-      case 2:
-        double interest = purchasePrice * 0.05;
-        purchasePrice += interest;
-        break;
-      case 3:
-        double discount = purchasePrice * 0.10;
-        purchasePrice -= discount;
-        break;
-      default:
-        print('Invalid payment method');
+
+    String? input = stdin.readLineSync();
+    try {
+      paymentMethodChoosed = int.parse(input ?? '');
+      if (paymentMethodChoosed < 0 || paymentMethodChoosed > 3) {
+        print('Enter a valid option between 0 and 3.');
+        paymentMethodChoosed = null;
+      }
+    } on FormatException {
+      print('Invalid format. Enter only numbers.');
+      paymentMethodChoosed = null;
     }
-  } while (paymentMethodChoosed < 0 || paymentMethodChoosed > 3);
+  } while (paymentMethodChoosed == null);
+
+  // Aplica descontos/juros
+  switch (paymentMethodChoosed) {
+    case 0: // Dinheiro
+      double? valuePaid;
+      do {
+        stdout.write('Enter the value paid: ');
+        String? input = stdin.readLineSync();
+        try {
+          valuePaid = double.parse(input ?? '');
+          if (valuePaid < purchasePrice) {
+            print("Insufficient amount. Remaining: \$${(purchasePrice - valuePaid).toStringAsFixed(2)}");
+            valuePaid = null;
+          }
+        } on FormatException {
+          print('Invalid format. Enter a valid number.');
+          valuePaid = null;
+        }
+      } while (valuePaid == null);
+
+      double discount = purchasePrice * 0.10;
+      purchasePrice -= discount;
+      if (valuePaid > purchasePrice) {
+        print("Your change is: \$${(valuePaid - purchasePrice).toStringAsFixed(2)}");
+      }
+      break;
+
+    case 1: // Debit
+      double discount = purchasePrice * 0.05;
+      purchasePrice -= discount;
+      break;
+
+    case 2: // Credit
+      double interest = purchasePrice * 0.05;
+      purchasePrice += interest;
+      break;
+
+    case 3: // PIX
+      double discount = purchasePrice * 0.10;
+      purchasePrice -= discount;
+      break;
+  }
 
   return purchasePrice;
 }
 
-bool isValid(String input) {
-  final regex = RegExp(r'^[0-9eE]+$');
-  return regex.hasMatch(input);
-}
-
 dynamic initiatePurchase(productsAndServicesList) {
+  /*
+    Initiate the purchase flow, allowing the user to select products/services
+    and their quantities (with validations), and then proceed to payment.
+  */
   String? userProductChoice;
   String? userProductQuantity;
+  int? userProductChoiceAsNumber;
+  int? userProductQuantityAsNumber;
+  bool isQuantityValid;
+
   dynamic userCart = [];
 
-    // User product choice.
-    do {
-      listProductsAndServices(productsAndServicesList);
+  // User product choice.
+  do {
+    listProductsAndServices(productsAndServicesList);
+
+    // Reset vars in each iteration.
+    userProductChoiceAsNumber = null;
+    userProductQuantityAsNumber = null;
+    isQuantityValid = false;
+
+    // Product choice.
+    while (userProductChoiceAsNumber == null) {
       stdout.write('\nChoose a product (e/E to exit): ');
       userProductChoice = stdin.readLineSync();
-      while (userProductChoice == null || userProductChoice.trim().isEmpty 
-        || !isValid(userProductChoice)) 
-      {
-        stdout.write('Enter a valid choice (e/E to exit): ');
-        userProductChoice = stdin.readLineSync();
-      }
       if (userProductChoice == 'e' || userProductChoice == 'E') {
-        break;
+        return userCart; // Returns the current cart.
       }
-      
-      bool isQuantityValid = false;
+      try {
+        userProductChoiceAsNumber = int.parse(userProductChoice ?? '');
+        if (userProductChoiceAsNumber < 0 ||
+            userProductChoiceAsNumber >= productsAndServicesList['title'].length) {
+          userProductChoiceAsNumber = null;
+          print('Enter an option between 0 and ${productsAndServicesList['title'].length - 1}');
+        }
+      } on FormatException {
+        print('Invalid format. Enter only valid numbers.');
+      }
+    }
 
-      // Adding product and quantity to the cart.
-      do {
-        // In case of a service, is not need to insert the quantity.
-        if (productsAndServicesList['stock'][int.parse(userProductChoice)] ==
-            null) {
-          print('This is a service, you do not need to choose a quantity.');
-          isQuantityValid = true;
-          double productPrice =
-              productsAndServicesList['price'][int.parse(userProductChoice)];
-          userCart.add({
-            'product': productsAndServicesList['title'][int.parse(userProductChoice)],
-            'quantity': 1,
-            'price': productPrice,
-          });
-
-        } else {
-          stdout.write('Enter a quantity: ');
+    // Validate the quantity.
+    while (!isQuantityValid) {
+      if (productsAndServicesList['stock'][userProductChoiceAsNumber] == null) {
+        // Service case.
+        isQuantityValid = true;
+        print('This is a service, you do not need to choose a quantity.');
+        double productPrice =
+            productsAndServicesList['price'][userProductChoiceAsNumber];
+        userCart.add({
+          'product': productsAndServicesList['title'][userProductChoiceAsNumber],
+          'quantity': 1,
+          'price': productPrice,
+        });
+      } else {
+        // Product case.
+        while (userProductQuantityAsNumber == null || userProductQuantityAsNumber <= 0) {
+          stdout.write('Enter a integer quantity: ');
           userProductQuantity = stdin.readLineSync();
-          while(userProductQuantity == null || userProductQuantity.trim().isEmpty ||
-            int.parse(userProductQuantity) <= 0 )
-          {
-            stdout.write('Enter a valid quantity: ');
-            userProductQuantity = stdin.readLineSync();
-          }
-          int userProductQuantityInNumber = int.parse(userProductQuantity);
-
-          if (userProductQuantityInNumber <=
-              productsAndServicesList['stock'][int.parse(userProductChoice)]) {
-            isQuantityValid = true;
-            double productPrice =
-                productsAndServicesList['price'][int.parse(userProductChoice)];
-              userCart.add({
-                'product': productsAndServicesList['title'][int.parse(userProductChoice)],
-                'quantity': userProductQuantity,
-                'price': productPrice,
-              });
-          } else {
-            print('Invalid quantity');
-            isQuantityValid = false;
+          try {
+            userProductQuantityAsNumber = int.parse(userProductQuantity ?? '');
+          } on FormatException {
+            print('Invalid format. Enter only integer numbers');
+            userProductQuantityAsNumber = null;
           }
         }
-      } while (isQuantityValid == false);
-    } while (userProductChoice != 'e' && userProductChoice != 'E');
-    print(userCart);
+
+        if (userProductQuantityAsNumber <=
+            productsAndServicesList['stock'][userProductChoiceAsNumber]) {
+          isQuantityValid = true;
+          double productPrice =
+              productsAndServicesList['price'][userProductChoiceAsNumber];
+          userCart.add({
+            'product': productsAndServicesList['title'][userProductChoiceAsNumber],
+            'quantity': userProductQuantityAsNumber,
+            'price': productPrice,
+          });
+        } else {
+          print('Invalid quantity, greater than stock.');
+          isQuantityValid = false;
+          break;
+        }
+      }
+    }
+  } while (true);
+
 }
