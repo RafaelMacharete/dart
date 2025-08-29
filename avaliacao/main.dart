@@ -21,9 +21,7 @@ void main() {
 
   // Handling invalid entrance.
   // Cpf regex (xxx.xxx.xxx-xx)
-  final exp = RegExp(
-    r'^\d{3}\.\d{3}\.\d{3}-\d{2}$',
-  );
+  final exp = RegExp(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$');
 
   stdout.write('Enter your cpf (e.g., xxx.xxx.xxx-xx): ');
   String? document = stdin.readLineSync();
@@ -69,7 +67,7 @@ double calculatePurchaseValue(dynamic userCart) {
   do {
     stdout.write(
       '\nTotal: \$${purchasePrice.toStringAsFixed(2)}'
-      '\nChoose a payment method:' 
+      '\nChoose a payment method:'
       '\n[0] - Cash (10% discount)'
       '\n[1] - Debit (5% discount)'
       '\n[2] - Credit (5% interest)'
@@ -100,7 +98,9 @@ double calculatePurchaseValue(dynamic userCart) {
         try {
           valuePaid = double.parse(input ?? '');
           if (valuePaid < purchasePrice) {
-            print("Insufficient amount. Remaining: \$${(purchasePrice - valuePaid).toStringAsFixed(2)}");
+            print(
+              "Insufficient amount. Remaining: \$${(purchasePrice - valuePaid).toStringAsFixed(2)}",
+            );
             valuePaid = null;
           }
         } on FormatException {
@@ -112,7 +112,9 @@ double calculatePurchaseValue(dynamic userCart) {
       double discount = purchasePrice * 0.10;
       purchasePrice -= discount;
       if (valuePaid > purchasePrice) {
-        print("Your change is: \$${(valuePaid - purchasePrice).toStringAsFixed(2)}");
+        print(
+          "Your change is: \$${(valuePaid - purchasePrice).toStringAsFixed(2)}",
+        );
       }
       break;
 
@@ -167,9 +169,12 @@ dynamic initiatePurchase(productsAndServicesList) {
       try {
         userProductChoiceAsNumber = int.parse(userProductChoice ?? '');
         if (userProductChoiceAsNumber < 0 ||
-            userProductChoiceAsNumber >= productsAndServicesList['title'].length) {
+            userProductChoiceAsNumber >=
+                productsAndServicesList['title'].length) {
           userProductChoiceAsNumber = null;
-          print('Enter an option between 0 and ${productsAndServicesList['title'].length - 1}');
+          print(
+            'Enter an option between 0 and ${productsAndServicesList['title'].length - 1}',
+          );
         }
       } on FormatException {
         print('Invalid format. Enter only valid numbers.');
@@ -185,13 +190,15 @@ dynamic initiatePurchase(productsAndServicesList) {
         double productPrice =
             productsAndServicesList['price'][userProductChoiceAsNumber];
         userCart.add({
-          'product': productsAndServicesList['title'][userProductChoiceAsNumber],
+          'product':
+              productsAndServicesList['title'][userProductChoiceAsNumber],
           'quantity': 1,
           'price': productPrice,
         });
       } else {
         // Product case.
-        while (userProductQuantityAsNumber == null || userProductQuantityAsNumber <= 0) {
+        while (userProductQuantityAsNumber == null ||
+            userProductQuantityAsNumber <= 0) {
           stdout.write('Enter a integer quantity: ');
           userProductQuantity = stdin.readLineSync();
           try {
@@ -208,7 +215,8 @@ dynamic initiatePurchase(productsAndServicesList) {
           double productPrice =
               productsAndServicesList['price'][userProductChoiceAsNumber];
           userCart.add({
-            'product': productsAndServicesList['title'][userProductChoiceAsNumber],
+            'product':
+                productsAndServicesList['title'][userProductChoiceAsNumber],
             'quantity': userProductQuantityAsNumber,
             'price': productPrice,
           });
@@ -220,5 +228,4 @@ dynamic initiatePurchase(productsAndServicesList) {
       }
     }
   } while (true);
-
 }
